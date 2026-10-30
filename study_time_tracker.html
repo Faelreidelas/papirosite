@@ -1,0 +1,874 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Horas Líquidas - Tracker de Estudos</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        dark: {
+                            900: '#0b0f19',
+                            800: '#111827',
+                            700: '#1f2937',
+                            600: '#374151',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Supabase JS Client -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-dark-900 text-gray-100 font-sans min-h-screen flex flex-col justify-between selection:bg-emerald-500 selection:text-white">
+
+    <!-- Header -->
+    <header class="bg-dark-800 border-b border-gray-800 px-6 py-4 flex items-center justify-between shadow-md">
+        <div class="flex items-center space-x-3">
+            <div class="bg-emerald-500/10 p-2.5 rounded-xl border border-emerald-500/20 text-emerald-400">
+                <i class="fa-solid fa-stopwatch text-xl"></i>
+            </div>
+            <div>
+                <h1 class="text-lg font-bold tracking-tight">Horas Líquidas</h1>
+                <p class="text-xs text-gray-400">Vibecoding Study Hub</p>
+            </div>
+        </div>
+
+        <div class="flex items-center space-x-4">
+            <!-- Seletor de Usuários -->
+            <div class="flex items-center space-x-2 bg-dark-900 px-3 py-1.5 rounded-xl border border-gray-700">
+                <i class="fa-solid fa-user text-emerald-400 text-sm"></i>
+                <select id="userSelect" onchange="mudarUsuario(this.value)" class="bg-transparent text-sm font-medium focus:outline-none cursor-pointer">
+                    <!-- Preenchido via JS -->
+                </select>
+                <button onclick="abrirModalNovoUsuario()" class="text-gray-400 hover:text-white text-xs ml-1" title="Adicionar Usuário">
+                    <i class="fa-solid fa-plus"></i>
+                </button>
+            </div>
+
+            <!-- Botão Config Supabase -->
+            <button onclick="abrirModalConfig()" class="bg-dark-700 hover:bg-dark-600 p-2 rounded-xl border border-gray-700 transition text-gray-300" title="Configurar Supabase">
+                <i class="fa-solid fa-database"></i>
+            </button>
+
+            <!-- Status Conexão -->
+            <div id="connectionStatus" class="hidden sm:flex items-center space-x-2 text-xs px-3 py-1.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                <span id="statusText">Nuvem Conectada</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-6 py-8 grid grid-cols-1 lg:grid-cols-3 gap-6 flex-grow w-full">
+        
+        <!-- Coluna Esquerda & Centro -->
+        <div class="lg:col-span-2 space-y-6">
+            
+            <!-- Cronômetro Card -->
+            <div class="bg-dark-800 rounded-2xl p-6 border border-gray-800 shadow-xl relative overflow-hidden flex flex-col justify-between">
+                <div class="flex items-center justify-between mb-6">
+                    <div class="flex items-center space-x-2">
+                        <span id="timerDot" class="w-3 h-3 rounded-full bg-emerald-500"></span>
+                        <h2 id="timerTitle" class="font-semibold text-gray-200">Sessão Ativa</h2>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <label class="text-xs text-gray-400">Matéria:</label>
+                        <select id="timerSubjectSelect" class="bg-dark-900 text-sm border border-gray-700 rounded-lg px-3 py-1.5 focus:outline-none focus:border-emerald-500">
+                            <option value="">Sem matérias (Crie uma)</option>
+                        </select>
+                        <button onclick="abrirModalNovaMateria()" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs px-2.5 py-1.5 rounded-lg transition font-medium">
+                            + Nova
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Display do Cronômetro -->
+                <div class="text-center py-6">
+                    <div id="timerDisplay" class="text-6xl sm:text-7xl font-black tracking-wider text-white font-mono drop-shadow-lg">
+                        00:00:00
+                    </div>
+                    <div class="flex justify-center items-center space-x-4 mt-2">
+                        <p id="timerSubtext" class="text-xs text-gray-400">Pronto para começar? Clique em Iniciar!</p>
+                        <span id="pausesCounterBadge" class="hidden text-[10px] bg-amber-500/10 text-amber-400 px-2 py-0.5 rounded-full border border-amber-500/20 font-medium">
+                            <i class="fa-solid fa-mug-hot"></i> Pausas: <span id="pauseCountNum">0</span>
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Controles do Cronômetro -->
+                <div class="flex items-center justify-center space-x-4 pt-4 border-t border-gray-700/50">
+                    <button id="startPauseBtn" onclick="toggleTimer()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-8 py-3 rounded-xl font-semibold transition flex items-center space-x-2 shadow-lg shadow-emerald-600/20">
+                        <i id="startPauseIcon" class="fa-solid fa-play"></i>
+                        <span id="startPauseText">Iniciar Foco</span>
+                    </button>
+                    <button id="pauseResumeBtn" onclick="pausarOuRetomarCronometro()" disabled class="bg-dark-700 text-gray-500 px-5 py-3 rounded-xl font-semibold transition border border-gray-700 cursor-not-allowed">
+                        <i class="fa-solid fa-pause"></i> Pausa
+                    </button>
+                    <button onclick="resetTimer()" class="bg-dark-700 hover:bg-dark-600 text-gray-300 p-3 rounded-xl transition border border-gray-700" title="Zerar">
+                        <i class="fa-solid fa-rotate-right"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Registro Manual -->
+            <div class="bg-dark-800 rounded-2xl p-6 border border-gray-800 shadow-xl">
+                <h3 class="font-semibold text-gray-200 mb-1">Registro Manual</h3>
+                <p class="text-xs text-gray-400 mb-4">Estudou fora do app? Insira o tempo de estudo manualmente aqui.</p>
+                
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div>
+                        <label class="block text-xs text-gray-400 mb-1">Matéria</label>
+                        <select id="manualSubjectSelect" class="w-full bg-dark-900 text-sm border border-gray-700 rounded-xl px-3 py-2.5 focus:outline-none focus:border-emerald-500">
+                            <option value="">Selecione...</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs text-gray-400 mb-1">Horas</label>
+                        <input type="number" id="manualHours" min="0" value="1" class="w-full bg-dark-900 text-sm border border-gray-700 rounded-xl px-3 py-2.5 focus:outline-none focus:border-emerald-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs text-gray-400 mb-1">Minutos</label>
+                        <input type="number" id="manualMinutes" min="0" max="59" value="0" class="w-full bg-dark-900 text-sm border border-gray-700 rounded-xl px-3 py-2.5 focus:outline-none focus:border-emerald-500">
+                    </div>
+                </div>
+                <div class="mt-4 flex justify-end">
+                    <button onclick="adicionarHorasManuais()" class="bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-semibold px-5 py-2.5 rounded-xl transition shadow-lg shadow-emerald-600/20">
+                        + Adicionar Horas
+                    </button>
+                </div>
+            </div>
+
+            <!-- Estatísticas e Meta Diária -->
+            <div class="bg-dark-800 rounded-2xl p-6 border border-gray-800 shadow-xl">
+                <div class="flex items-center justify-between mb-4">
+                    <div>
+                        <h3 class="font-semibold text-gray-200">Estatísticas e Meta Diária</h3>
+                        <p id="userStatsSubtitle" class="text-xs text-gray-400">Resumo de desempenho</p>
+                    </div>
+                    <button onclick="abrirModalMeta()" class="text-xs bg-dark-700 hover:bg-dark-600 px-3 py-1.5 rounded-xl border border-gray-700 text-emerald-400 font-medium transition">
+                        <i class="fa-solid fa-bullseye"></i> Ajustar Meta (<span id="metaDiariaBadgeText">2h 0m</span>)
+                    </button>
+                </div>
+
+                <div class="bg-dark-900 p-4 rounded-xl border border-gray-800 mb-6">
+                    <div class="flex justify-between text-xs mb-2">
+                        <span class="text-gray-400 font-medium">Progresso da Meta Hoje</span>
+                        <span id="metaProgressoTexto" class="text-emerald-400 font-bold">0h 0m / 2h 0m (0%)</span>
+                    </div>
+                    <div class="w-full bg-dark-800 h-3 rounded-full overflow-hidden border border-gray-700">
+                        <div id="metaProgressBar" class="bg-emerald-500 h-full rounded-full transition-all duration-500" style="width: 0%"></div>
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+                    <div class="bg-dark-900 p-4 rounded-xl border border-gray-800">
+                        <span class="text-xs text-gray-400 block">Total Acumulado</span>
+                        <span id="statTotalHours" class="text-2xl font-bold text-emerald-400 mt-1 block">0h 0m</span>
+                    </div>
+                    <div class="bg-dark-900 p-4 rounded-xl border border-gray-800">
+                        <span class="text-xs text-gray-400 block">Sessões Concluídas</span>
+                        <span id="statTotalSessions" class="text-2xl font-bold text-gray-200 mt-1 block">0</span>
+                    </div>
+                    <div class="bg-dark-900 p-4 rounded-xl border border-gray-800">
+                        <span class="text-xs text-gray-400 block">Matérias Ativas</span>
+                        <span id="statTotalSubjects" class="text-2xl font-bold text-gray-200 mt-1 block">0</span>
+                    </div>
+                </div>
+
+                <div>
+                    <h4 class="text-xs font-semibold uppercase text-gray-400 tracking-wider mb-3">Horas por Matéria</h4>
+                    <div id="subjectHoursList" class="space-y-3">
+                        <p class="text-xs text-gray-500 italic">Nenhum registro ainda.</p>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Coluna Direita (Ranking + Quem está estudando AGORA) -->
+        <div class="space-y-6">
+            
+            <!-- Quem está estudando AGORA (Feed ao Vivo) -->
+            <div class="bg-dark-800 rounded-2xl p-6 border border-gray-800 shadow-xl">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="flex items-center space-x-2">
+                        <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping"></span>
+                        <h3 class="font-semibold text-gray-200">Estudando Agora</h3>
+                    </div>
+                    <span class="text-[10px] bg-emerald-500/10 text-emerald-400 px-2 py-0.5 rounded-full border border-emerald-500/20">Ao Vivo</span>
+                </div>
+                <div id="liveStudyingNowList" class="space-y-2.5">
+                    <p class="text-xs text-gray-500 italic">Ninguém focando neste momento.</p>
+                </div>
+            </div>
+
+            <!-- Ranking da Galera -->
+            <div class="bg-dark-800 rounded-2xl p-6 border border-gray-800 shadow-xl">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="flex items-center space-x-2">
+                        <i class="fa-solid fa-trophy text-amber-400"></i>
+                        <h3 class="font-semibold text-gray-200">Ranking da Galera</h3>
+                    </div>
+                    <span class="text-[10px] bg-amber-500/10 text-amber-400 px-2 py-0.5 rounded-full border border-amber-500/20 font-medium">Horas Líquidas</span>
+                </div>
+                
+                <div id="leaderboardList" class="space-y-3">
+                    <!-- Preenchido via JS -->
+                </div>
+            </div>
+
+            <!-- Gerenciar Matérias -->
+            <div class="bg-dark-800 rounded-2xl p-6 border border-gray-800 shadow-xl">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="font-semibold text-gray-200">Suas Matérias</h3>
+                    <button onclick="abrirModalNovaMateria()" class="text-xs text-emerald-400 hover:text-emerald-300 font-medium">+ Criar Matéria</button>
+                </div>
+                <div id="subjectsManageList" class="space-y-2 max-h-48 overflow-y-auto pr-1">
+                    <p class="text-xs text-gray-500 italic">Carregando matérias...</p>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Modais -->
+    <div id="configModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+        <div class="bg-dark-800 border border-gray-700 rounded-2xl max-w-md w-full p-6 shadow-2xl">
+            <h3 class="text-lg font-bold mb-2">Configurar Supabase</h3>
+            <p class="text-xs text-gray-400 mb-4">Insira suas credenciais da nuvem para salvar os dados online.</p>
+            <div class="space-y-3">
+                <div>
+                    <label class="block text-xs text-gray-400 mb-1">Project URL</label>
+                    <input type="text" id="inputUrl" placeholder="https://seu-projeto.supabase.co" class="w-full bg-dark-900 border border-gray-700 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-emerald-500">
+                </div>
+                <div>
+                    <label class="block text-xs text-gray-400 mb-1">Publishable Key (Anon)</label>
+                    <input type="password" id="inputKey" placeholder="sb_publishable_..." class="w-full bg-dark-900 border border-gray-700 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-emerald-500">
+                </div>
+            </div>
+            <div class="flex justify-end space-x-3 mt-6">
+                <button onclick="fecharModalConfig()" class="px-4 py-2 rounded-xl text-sm bg-dark-700 hover:bg-dark-600 transition">Cancelar</button>
+                <button onclick="salvarConfigSupabase()" class="px-4 py-2 rounded-xl text-sm bg-emerald-600 hover:bg-emerald-500 text-white font-semibold transition">Salvar & Conectar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Nova Matéria -->
+    <div id="subjectModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+        <div class="bg-dark-800 border border-gray-700 rounded-2xl max-w-sm w-full p-6 shadow-2xl">
+            <h3 class="text-lg font-bold mb-2">Nova Matéria</h3>
+            <input type="text" id="inputNewSubjectName" placeholder="Ex: Algoritmos, Física, Direito..." class="w-full bg-dark-900 border border-gray-700 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-emerald-500 mb-4">
+            <div class="flex justify-end space-x-3">
+                <button onclick="fecharModalNovaMateria()" class="px-4 py-2 rounded-xl text-sm bg-dark-700 hover:bg-dark-600 transition">Cancelar</button>
+                <button onclick="criarMateria()" class="px-4 py-2 rounded-xl text-sm bg-emerald-600 hover:bg-emerald-500 text-white font-semibold transition">Criar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Novo Usuário -->
+    <div id="userModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+        <div class="bg-dark-800 border border-gray-700 rounded-2xl max-w-sm w-full p-6 shadow-2xl">
+            <h3 class="text-lg font-bold mb-2">Adicionar Novo Amigo</h3>
+            <input type="text" id="inputNewUserName" placeholder="Ex: Fael, Amigo 1..." class="w-full bg-dark-900 border border-gray-700 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-emerald-500 mb-4">
+            <div class="flex justify-end space-x-3">
+                <button onclick="fecharModalNovoUsuario()" class="px-4 py-2 rounded-xl text-sm bg-dark-700 hover:bg-dark-600 transition">Cancelar</button>
+                <button onclick="criarUsuario()" class="px-4 py-2 rounded-xl text-sm bg-emerald-600 hover:bg-emerald-500 text-white font-semibold transition">Adicionar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Ajustar Meta -->
+    <div id="metaModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+        <div class="bg-dark-800 border border-gray-700 rounded-2xl max-w-sm w-full p-6 shadow-2xl">
+            <h3 class="text-lg font-bold mb-2">Definir Meta Diária</h3>
+            <div class="grid grid-cols-2 gap-3 mb-4">
+                <div>
+                    <label class="block text-xs text-gray-400 mb-1">Horas</label>
+                    <input type="number" id="inputMetaHoras" min="0" max="16" value="2" class="w-full bg-dark-900 border border-gray-700 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-emerald-500">
+                </div>
+                <div>
+                    <label class="block text-xs text-gray-400 mb-1">Minutos</label>
+                    <input type="number" id="inputMetaMinutos" min="0" max="59" value="0" class="w-full bg-dark-900 border border-gray-700 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-emerald-500">
+                </div>
+            </div>
+            <div class="flex justify-end space-x-3">
+                <button onclick="fecharModalMeta()" class="px-4 py-2 rounded-xl text-sm bg-dark-700 hover:bg-dark-600 transition">Cancelar</button>
+                <button onclick="salvarMetaDiaria()" class="px-4 py-2 rounded-xl text-sm bg-emerald-600 hover:bg-emerald-500 text-white font-semibold transition">Salvar Meta</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Script principal da aplicação -->
+    <script>
+        let supabaseUrl = localStorage.getItem('supabase_url') || '';
+        let supabaseKey = localStorage.getItem('supabase_key') || '';
+        let supabaseClient = null;
+
+        let currentUser = null;
+        let usersList = [];
+        let subjectsList = [];
+        let activitiesList = [];
+
+        let timerInterval = null;
+        let timerSeconds = 0;
+        let timerRunning = false;
+        let isPaused = false;
+        let pausesCount = 0;
+
+        window.addEventListener('DOMContentLoaded', async () => {
+            if (supabaseUrl && supabaseKey) {
+                initSupabase(supabaseUrl, supabaseKey);
+                await carregarDadosIniciais();
+                
+                // Atualizar dados a cada 5 segundos para ver amigos estudando em tempo real
+                setInterval(carregarDadosEmSegundoPlano, 5000);
+            } else {
+                abrirModalConfig();
+            }
+        });
+
+        function initSupabase(url, key) {
+            try {
+                supabaseClient = supabase.createClient(url, key);
+                document.getElementById('connectionStatus').classList.remove('hidden');
+                document.getElementById('statusText').innerText = "Nuvem Conectada";
+            } catch (e) {
+                console.error("Erro ao iniciar Supabase:", e);
+            }
+        }
+
+        async function carregarDadosIniciais() {
+            if (!supabaseClient) return;
+
+            try {
+                const { data: users, error: userError } = await supabaseClient.from('users').select('*');
+                if (userError) throw userError;
+
+                usersList = users || [];
+
+                if (usersList.length === 0) {
+                    const { data: newUser, error: createError } = await supabaseClient
+                        .from('users')
+                        .insert([{ name: 'Fael', meta_diaria: 120, em_foco: false }])
+                        .select()
+                        .single();
+                    if (!createError && newUser) usersList.push(newUser);
+                }
+
+                atualizarSeletorUsuarios();
+
+                let savedUserId = localStorage.getItem('current_user_id');
+                currentUser = usersList.find(u => u.id === savedUserId) || usersList[0];
+                if (currentUser) {
+                    document.getElementById('userSelect').value = currentUser.id;
+                    localStorage.setItem('current_user_id', currentUser.id);
+                }
+
+                await carregarDadosUsuarioAtual();
+            } catch (err) {
+                console.error("Erro ao carregar dados:", err);
+            }
+        }
+
+        async function carregarDadosUsuarioAtual() {
+            if (!supabaseClient || !currentUser) return;
+
+            try {
+                const { data: subjects } = await supabaseClient.from('subjects').select('*').eq('user_id', currentUser.id);
+                subjectsList = subjects || [];
+
+                const { data: activities } = await supabaseClient.from('activities').select('*').order('created_at', { ascending: false });
+                activitiesList = activities || [];
+
+                const { data: users } = await supabaseClient.from('users').select('*');
+                if (users) usersList = users;
+
+                atualizarTelas();
+            } catch (err) {
+                console.error("Erro ao carregar dados:", err);
+            }
+        }
+
+        async function carregarDadosEmSegundoPlano() {
+            if (!supabaseClient || !currentUser) return;
+            try {
+                const { data: users } = await supabaseClient.from('users').select('*');
+                if (users) {
+                    usersList = users;
+                    atualizarFeedAoVivo();
+                }
+            } catch (e) {}
+        }
+
+        function atualizarSeletorUsuarios() {
+            const select = document.getElementById('userSelect');
+            select.innerHTML = '';
+            usersList.forEach(u => {
+                const opt = document.createElement('option');
+                opt.value = u.id;
+                opt.innerText = u.name;
+                select.appendChild(opt);
+            });
+            if (currentUser) select.value = currentUser.id;
+        }
+
+        async function mudarUsuario(userId) {
+            currentUser = usersList.find(u => u.id === userId);
+            localStorage.setItem('current_user_id', currentUser.id);
+            await carregarDadosUsuarioAtual();
+        }
+
+        function atualizarTelas() {
+            const timerSub = document.getElementById('timerSubjectSelect');
+            const manualSub = document.getElementById('manualSubjectSelect');
+            const manageList = document.getElementById('subjectsManageList');
+
+            timerSub.innerHTML = '<option value="">Selecione a matéria...</option>';
+            manualSub.innerHTML = '<option value="">Selecione a matéria...</option>';
+            manageList.innerHTML = '';
+
+            if (subjectsList.length === 0) {
+                manageList.innerHTML = '<p class="text-xs text-gray-500 italic">Nenhuma matéria cadastrada.</p>';
+            }
+
+            subjectsList.forEach(sub => {
+                timerSub.innerHTML += `<option value="${sub.id}">${sub.name}</option>`;
+                manualSub.innerHTML += `<option value="${sub.id}">${sub.name}</option>`;
+                manageList.innerHTML += `
+                    <div class="flex items-center justify-between bg-dark-900 px-3 py-2 rounded-xl border border-gray-800 text-sm">
+                        <span>${sub.name}</span>
+                        <button onclick="deletarMateria('${sub.id}')" class="text-gray-500 hover:text-red-400 text-xs"><i class="fa-solid fa-trash"></i></button>
+                    </div>
+                `;
+            });
+
+            const minhasAtividades = activitiesList.filter(a => a.user_id === currentUser.id);
+            const totalMinutos = minhasAtividades.reduce((acc, curr) => acc + curr.duration_minutes, 0);
+            
+            const hojeStr = new Date().toISOString().split('T')[0];
+            const minutosHoje = minhasAtividades
+                .filter(a => a.created_at.startsWith(hojeStr))
+                .reduce((acc, curr) => acc + curr.duration_minutes, 0);
+
+            const horas = Math.floor(totalMinutos / 60);
+            const minutos = totalMinutos % 60;
+
+            document.getElementById('statTotalHours').innerText = `${horas}h ${minutos}m`;
+            document.getElementById('statTotalSessions').innerText = minhasAtividades.length;
+            document.getElementById('statTotalSubjects').innerText = subjectsList.length;
+            document.getElementById('userStatsSubtitle').innerText = `Resumo de desempenho de ${currentUser.name}`;
+
+            const metaMinutos = (currentUser.meta_diaria || 120);
+            const metaH = Math.floor(metaMinutos / 60);
+            const metaM = metaMinutos % 60;
+            document.getElementById('metaDiariaBadgeText').innerText = `${metaH}h ${metaM}m`;
+            
+            const percentualMeta = metaMinutos > 0 ? Math.min(100, Math.round((minutosHoje / metaMinutos) * 100)) : 0;
+            const hHoje = Math.floor(minutosHoje / 60);
+            const mHoje = minutosHoje % 60;
+            document.getElementById('metaProgressoTexto').innerText = `${hHoje}h ${mHoje}m / ${metaH}h ${metaM}m (${percentualMeta}%)`;
+            document.getElementById('metaProgressBar').style.width = `${percentualMeta}%`;
+
+            const subjectHoursList = document.getElementById('subjectHoursList');
+            subjectHoursList.innerHTML = '';
+            if (subjectsList.length === 0) {
+                subjectHoursList.innerHTML = '<p class="text-xs text-gray-500 italic">Nenhum registro ainda.</p>';
+            } else {
+                subjectsList.forEach(sub => {
+                    const minsMateria = minhasAtividades.filter(a => a.subject_id === sub.id).reduce((acc, curr) => acc + curr.duration_minutes, 0);
+                    const hMat = Math.floor(minsMateria / 60);
+                    const mMat = minsMateria % 60;
+                    subjectHoursList.innerHTML += `
+                        <div>
+                            <div class="flex justify-between text-xs mb-1">
+                                <span class="text-gray-300 font-medium">${sub.name}</span>
+                                <span class="text-emerald-400">${hMat}h ${mMat}m</span>
+                            </div>
+                            <div class="w-full bg-dark-900 h-2 rounded-full overflow-hidden border border-gray-800">
+                                <div class="bg-emerald-500 h-full rounded-full transition-all duration-500" style="width: ${totalMinutos > 0 ? (minsMateria / totalMinutos) * 100 : 0}%"></div>
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+
+            const leaderboardList = document.getElementById('leaderboardList');
+            leaderboardList.innerHTML = '';
+            const ranking = usersList.map(u => {
+                const mins = activitiesList.filter(a => a.user_id === u.id).reduce((acc, curr) => acc + curr.duration_minutes, 0);
+                return { user: u, totalMinutos: mins };
+            }).sort((a, b) => b.totalMinutos - a.totalMinutos);
+
+            ranking.forEach((item, index) => {
+                const hRank = Math.floor(item.totalMinutos / 60);
+                const mRank = item.totalMinutos % 60;
+                const isMe = item.user.id === currentUser.id ? ' (você)' : '';
+                const badgeColor = index === 0 ? 'text-amber-400 bg-amber-500/10 border-amber-500/20' : 'text-gray-400 bg-dark-900 border-gray-800';
+
+                leaderboardList.innerHTML += `
+                    <div class="flex items-center justify-between bg-dark-900 px-3 py-2.5 rounded-xl border border-gray-800 text-sm">
+                        <div class="flex items-center space-x-3">
+                            <span class="w-6 h-6 rounded-lg flex items-center justify-center text-xs font-bold border ${badgeColor}">#${index + 1}</span>
+                            <span class="font-medium text-gray-200">${item.user.name}${isMe}</span>
+                        </div>
+                        <span class="font-bold text-emerald-400">${hRank}h ${mRank}m</span>
+                    </div>
+                `;
+            });
+
+            atualizarFeedAoVivo();
+        }
+
+        function atualizarFeedAoVivo() {
+            const liveList = document.getElementById('liveStudyingNowList');
+            liveList.innerHTML = '';
+
+            const quemEstaEstudando = usersList.filter(u => u.em_foco === true);
+
+            if (quemEstaEstudando.length === 0) {
+                liveList.innerHTML = '<p class="text-xs text-gray-500 italic">Ninguém focando neste momento.</p>';
+            } else {
+                quemEstaEstudando.forEach(u => {
+                    const materiaNome = u.materia_atual || 'Estudando';
+                    const isMe = u.id === currentUser.id ? ' (Você)' : '';
+                    liveList.innerHTML += `
+                        <div class="bg-dark-900 p-3 rounded-xl border border-emerald-500/30 flex items-center justify-between text-xs shadow-md">
+                            <div class="flex items-center space-x-2.5">
+                                <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping"></span>
+                                <div>
+                                    <span class="font-bold text-gray-200">${u.name}${isMe}</span>
+                                    <span class="text-gray-400 block mt-0.5">Matéria: <strong class="text-emerald-400">${materiaNome}</strong></span>
+                                </div>
+                            </div>
+                            <span class="text-[10px] bg-emerald-500/10 text-emerald-400 px-2 py-1 rounded-lg border border-emerald-500/20 font-semibold">Ao Vivo ⚡</span>
+                        </div>
+                    `;
+                });
+            }
+        }
+
+        // Cronômetro com Atualização de Status Online
+        async function toggleTimer() {
+            const subId = document.getElementById('timerSubjectSelect').value;
+            if (!subId && !timerRunning) {
+                alert('Selecione uma matéria para iniciar o cronômetro!');
+                return;
+            }
+
+            const subObj = subjectsList.find(s => s.id === subId);
+            const nomeMateria = subObj ? subObj.name : 'Estudos';
+
+            const btn = document.getElementById('startPauseBtn');
+            const pauseBtn = document.getElementById('pauseResumeBtn');
+            const icon = document.getElementById('startPauseIcon');
+            const text = document.getElementById('startPauseText');
+
+            if (!timerRunning && !isPaused) {
+                timerRunning = true;
+                isPaused = false;
+                pausesCount = 0;
+                document.getElementById('pauseCountNum').innerText = pausesCount;
+                document.getElementById('pausesCounterBadge').classList.remove('hidden');
+
+                icon.className = "fa-solid fa-stop";
+                text.innerText = "Parar & Salvar";
+                btn.className = "bg-rose-600 hover:bg-rose-500 text-white px-6 py-3 rounded-xl font-semibold transition flex items-center space-x-2 shadow-lg shadow-rose-600/20";
+                
+                pauseBtn.disabled = false;
+                pauseBtn.className = "bg-amber-600 hover:bg-amber-500 text-white px-5 py-3 rounded-xl font-semibold transition border border-amber-500/30 cursor-pointer";
+
+                document.getElementById('timerSubjectSelect').disabled = true;
+                document.getElementById('timerDot').className = "w-3 h-3 rounded-full bg-emerald-500 animate-ping";
+                document.getElementById('timerTitle').innerText = "Foco Ativo ⚡";
+
+                // Atualizar status no Supabase (Em Foco = True)
+                currentUser.em_foco = true;
+                currentUser.materia_atual = nomeMateria;
+                await supabaseClient.from('users').update({ em_foco: true, materia_atual: nomeMateria }).eq('id', currentUser.id);
+                atualizarFeedAoVivo();
+
+                timerInterval = setInterval(() => {
+                    timerSeconds++;
+                    atualizarDisplayTimer();
+                }, 1000);
+            } else {
+                finalizarSessaoCronometro();
+            }
+        }
+
+        function pausarOuRetomarCronometro() {
+            const pauseBtn = document.getElementById('pauseResumeBtn');
+            if (!isPaused) {
+                isPaused = true;
+                timerRunning = false;
+                clearInterval(timerInterval);
+                pausesCount++;
+                document.getElementById('pauseCountNum').innerText = pausesCount;
+
+                pauseBtn.className = "bg-emerald-600 hover:bg-emerald-500 text-white px-5 py-3 rounded-xl font-semibold transition border border-emerald-500/30 cursor-pointer";
+                pauseBtn.innerHTML = '<i class="fa-solid fa-play"></i> Retomar';
+                document.getElementById('timerTitle').innerText = "Em Pausa ☕";
+            } else {
+                isPaused = false;
+                timerRunning = true;
+                pauseBtn.className = "bg-amber-600 hover:bg-amber-500 text-white px-5 py-3 rounded-xl font-semibold transition border border-amber-500/30 cursor-pointer";
+                pauseBtn.innerHTML = '<i class="fa-solid fa-pause"></i> Pausa';
+                document.getElementById('timerTitle').innerText = "Foco Ativo ⚡";
+
+                timerInterval = setInterval(() => {
+                    timerSeconds++;
+                    atualizarDisplayTimer();
+                }, 1000);
+            }
+        }
+
+        async function finalizarSessaoCronometro() {
+            timerRunning = false;
+            isPaused = false;
+            clearInterval(timerInterval);
+
+            const btn = document.getElementById('startPauseBtn');
+            const pauseBtn = document.getElementById('pauseResumeBtn');
+            const icon = document.getElementById('startPauseIcon');
+            const text = document.getElementById('startPauseText');
+            
+            icon.className = "fa-solid fa-play";
+            text.innerText = "Iniciar Foco";
+            btn.className = "bg-emerald-600 hover:bg-emerald-500 text-white px-8 py-3 rounded-xl font-semibold transition flex items-center space-x-2 shadow-lg shadow-emerald-600/20";
+            
+            pauseBtn.disabled = true;
+            pauseBtn.className = "bg-dark-700 text-gray-500 px-5 py-3 rounded-xl font-semibold transition border border-gray-700 cursor-not-allowed";
+            
+            document.getElementById('timerSubjectSelect').disabled = false;
+            document.getElementById('timerDot').className = "w-3 h-3 rounded-full bg-emerald-500";
+            document.getElementById('timerTitle').innerText = "Sessão Ativa";
+            document.getElementById('pausesCounterBadge').classList.add('hidden');
+
+            // Retirar status de foco ativo do banco
+            currentUser.em_foco = false;
+            currentUser.materia_atual = null;
+            await supabaseClient.from('users').update({ em_foco: false, materia_atual: null }).eq('id', currentUser.id);
+
+            const minutosEstudados = Math.floor(timerSeconds / 60);
+            if (minutosEstudados > 0) {
+                const subId = document.getElementById('timerSubjectSelect').value;
+                await salvarAtividadeNoBanco(subId, minutosEstudados);
+            } else {
+                alert('Sessão muito curta (< 1 min) não foi salva.');
+            }
+
+            timerSeconds = 0;
+            atualizarDisplayTimer();
+            atualizarFeedAoVivo();
+        }
+
+        async function salvarAtividadeNoBanco(subjectId, minutos) {
+            try {
+                const { data, error } = await supabaseClient
+                    .from('activities')
+                    .insert([{
+                        user_id: currentUser.id,
+                        subject_id: subjectId,
+                        duration_minutes: minutos,
+                        pauses_count: pausesCount
+                    }])
+                    .select()
+                    .single();
+
+                if (error) throw error;
+                activitiesList.unshift(data);
+                atualizarTelas();
+                alert(`Incrível! Sessão de ${minutos} minutos salva com sucesso! 🔥`);
+            } catch (err) {
+                console.error("Erro ao salvar atividade:", err);
+            }
+        }
+
+        function resetTimer() {
+            if (timerRunning || isPaused) {
+                finalizarSessaoCronometro();
+            }
+            timerSeconds = 0;
+            atualizarDisplayTimer();
+        }
+
+        function atualizarDisplayTimer() {
+            const hrs = String(Math.floor(timerSeconds / 3600)).padStart(2, '0');
+            const mins = String(Math.floor((timerSeconds % 3600) / 60)).padStart(2, '0');
+            const secs = String(timerSeconds % 60).padStart(2, '0');
+            document.getElementById('timerDisplay').innerText = `${hrs}:${mins}:${secs}`;
+        }
+
+        // Criar Matéria
+        async function criarMateria() {
+            const nomeInput = document.getElementById('inputNewSubjectName');
+            const nome = nomeInput.value.trim();
+            if (!nome || !currentUser) return;
+
+            try {
+                const { data, error } = await supabaseClient
+                    .from('subjects')
+                    .insert([{ name: nome, user_id: currentUser.id }])
+                    .select()
+                    .single();
+
+                if (error) throw error;
+                subjectsList.push(data);
+                nomeInput.value = '';
+                fecharModalNovaMateria();
+                atualizarTelas();
+            } catch (err) {
+                console.error("Erro ao criar matéria:", err);
+            }
+        }
+
+        async function deletarMateria(id) {
+            if (!confirm('Deseja apagar esta matéria?')) return;
+            try {
+                await supabaseClient.from('subjects').delete().eq('id', id);
+                subjectsList = subjectsList.filter(s => s.id !== id);
+                atualizarTelas();
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        // Criar Usuário
+        async function criarUsuario() {
+            const nomeInput = document.getElementById('inputNewUserName');
+            const nome = nomeInput.value.trim();
+            if (!nome) return;
+
+            try {
+                const { data, error } = await supabaseClient
+                    .from('users')
+                    .insert([{ name: nome, meta_diaria: 120, em_foco: false }])
+                    .select()
+                    .single();
+
+                if (error) throw error;
+                usersList.push(data);
+                currentUser = data;
+                localStorage.setItem('current_user_id', currentUser.id);
+                nomeInput.value = '';
+                fecharModalNovoUsuario();
+                atualizarSeletorUsuarios();
+                await carregarDadosUsuarioAtual();
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        // Adicionar Horas Manuais
+        async function adicionarHorasManuais() {
+            const subjectId = document.getElementById('manualSubjectSelect').value;
+            const hours = parseInt(document.getElementById('manualHours').value) || 0;
+            const minutes = parseInt(document.getElementById('manualMinutes').value) || 0;
+            const totalMins = (hours * 60) + minutes;
+
+            if (!subjectId || totalMins <= 0) {
+                alert('Preencha a matéria e um tempo válido!');
+                return;
+            }
+
+            try {
+                const { data, error } = await supabaseClient
+                    .from('activities')
+                    .insert([{ user_id: currentUser.id, subject_id: subjectId, duration_minutes: totalMins }])
+                    .select()
+                    .single();
+
+                if (error) throw error;
+                activitiesList.unshift(data);
+                atualizarTelas();
+                alert('Horas adicionadas manualmente com sucesso!');
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        // Meta Diária Modal
+        function abrirModalMeta() {
+            const metaAtualMins = (currentUser.meta_diaria || 120);
+            document.getElementById('inputMetaHoras').value = Math.floor(metaAtualMins / 60);
+            document.getElementById('inputMetaMinutos').value = metaAtualMins % 60;
+            document.getElementById('metaModal').classList.remove('hidden');
+            document.getElementById('metaModal').classList.add('flex');
+        }
+        function fecharModalMeta() {
+            document.getElementById('metaModal').classList.remove('flex');
+            document.getElementById('metaModal').classList.add('hidden');
+        }
+        async function salvarMetaDiaria() {
+            const h = parseInt(document.getElementById('inputMetaHoras').value) || 0;
+            const m = parseInt(document.getElementById('inputMetaMinutos').value) || 0;
+            const novosMinutos = (h * 60) + m;
+
+            try {
+                const { error } = await supabaseClient
+                    .from('users')
+                    .update({ meta_diaria: novosMinutos })
+                    .eq('id', currentUser.id);
+
+                if (error) throw error;
+                currentUser.meta_diaria = novosMinutos;
+                fecharModalMeta();
+                atualizarTelas();
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        // Modais Gerais
+        function abrirModalConfig() {
+            document.getElementById('inputUrl').value = supabaseUrl;
+            document.getElementById('inputKey').value = supabaseKey;
+            document.getElementById('configModal').classList.remove('hidden');
+            document.getElementById('configModal').classList.add('flex');
+        }
+        function fecharModalConfig() {
+            document.getElementById('configModal').classList.remove('flex');
+            document.getElementById('configModal').classList.add('hidden');
+        }
+        function salvarConfigSupabase() {
+            const u = document.getElementById('inputUrl').value.trim();
+            const k = document.getElementById('inputKey').value.trim();
+            if (!u || !k) return;
+            localStorage.setItem('supabase_url', u);
+            localStorage.setItem('supabase_key', k);
+            supabaseUrl = u;
+            supabaseKey = k;
+            initSupabase(u, k);
+            fecharModalConfig();
+            carregarDadosIniciais();
+        }
+
+        function abrirModalNovaMateria() {
+            document.getElementById('subjectModal').classList.remove('hidden');
+            document.getElementById('subjectModal').classList.add('flex');
+        }
+        function fecharModalNovaMateria() {
+            document.getElementById('subjectModal').classList.remove('flex');
+            document.getElementById('subjectModal').classList.add('hidden');
+        }
+
+        function abrirModalNovoUsuario() {
+            document.getElementById('userModal').classList.remove('hidden');
+            document.getElementById('userModal').classList.add('flex');
+        }
+        function fecharModalNovoUsuario() {
+            document.getElementById('userModal').classList.remove('flex');
+            document.getElementById('userModal').classList.add('hidden');
+        }
+    </script>
+</body>
+</html>
