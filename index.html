@@ -513,6 +513,7 @@
             document.getElementById('metaProgressoTexto').innerText = `${hHoje}h ${mHoje}m / ${metaH}h ${metaM}m (${percentualMeta}%)`;
             document.getElementById('metaProgressBar').style.width = `${percentualMeta}%`;
 
+            // Horas por Matéria (Individual)
             const subjectHoursList = document.getElementById('subjectHoursList');
             subjectHoursList.innerHTML = '';
             if (subjectsList.length === 0) {
@@ -525,8 +526,8 @@
                     subjectHoursList.innerHTML += `
                         <div>
                             <div class="flex justify-between text-xs mb-1">
-                                <span class="text-gray-300 font-medium">${sub.name}</span>
-                                <span class="text-emerald-400">${hMat}h ${mMat}m</span>
+                                <span class="text-gray-300 font-medium"><i class="fa-solid fa-book-open text-emerald-400 mr-1.5"></i> ${sub.name}</span>
+                                <span class="text-emerald-400 font-bold">${hMat}h ${mMat}m</span>
                             </div>
                             <div class="w-full bg-dark-900 h-2 rounded-full overflow-hidden border border-gray-800">
                                 <div class="bg-emerald-500 h-full rounded-full transition-all duration-500" style="width: ${totalMinutos > 0 ? (minsMateria / totalMinutos) * 100 : 0}%"></div>
@@ -536,11 +537,22 @@
                 });
             }
 
+            // FUNÇÃO PARA CALQUILAR A SEGUNDA-FEIRA DA SEMANA ATUAL (Para o Ranking Semanal)
+            const agora = new Date();
+            const diaSemana = agora.getDay();
+            const diffAteSegunda = agora.getDate() - diaSemana + (diaSemana === 0 ? -6 : 1);
+            const segundaFeira = new Date(agora.setDate(diffAteSegunda));
+            segundaFeira.setHours(0, 0, 0, 0);
+
+            // Ranking Geral Semanal (Reinicia toda segunda-feira)
             const leaderboardList = document.getElementById('leaderboardList');
             leaderboardList.innerHTML = '';
+            
             const ranking = usersList.map(u => {
-                const mins = activitiesList.filter(a => a.user_id === u.id).reduce((acc, curr) => acc + curr.duration_minutes, 0);
-                return { user: u, totalMinutos: mins };
+                const minsSemana = activitiesList
+                    .filter(a => a.user_id === u.id && new Date(a.created_at) >= segundaFeira)
+                    .reduce((acc, curr) => acc + curr.duration_minutes, 0);
+                return { user: u, totalMinutos: minsSemana };
             }).sort((a, b) => b.totalMinutos - a.totalMinutos);
 
             ranking.forEach((item, index) => {
@@ -562,6 +574,7 @@
 
             atualizarFeedAoVivo();
         }
+        
 
         function atualizarFeedAoVivo() {
             const liveList = document.getElementById('liveStudyingNowList');
