@@ -513,24 +513,49 @@
             document.getElementById('metaProgressoTexto').innerText = `${hHoje}h ${mHoje}m / ${metaH}h ${metaM}m (${percentualMeta}%)`;
             document.getElementById('metaProgressBar').style.width = `${percentualMeta}%`;
 
-            // Horas por Matéria (Individual)
+            // Horas por Matéria (Individual: Semanal + Total Histórico)
             const subjectHoursList = document.getElementById('subjectHoursList');
             subjectHoursList.innerHTML = '';
+            
             if (subjectsList.length === 0) {
                 subjectHoursList.innerHTML = '<p class="text-xs text-gray-500 italic">Nenhum registro ainda.</p>';
             } else {
                 subjectsList.forEach(sub => {
-                    const minsMateria = minhasAtividades.filter(a => a.subject_id === sub.id).reduce((acc, curr) => acc + curr.duration_minutes, 0);
-                    const hMat = Math.floor(minsMateria / 60);
-                    const mMat = minsMateria % 60;
+                    // 1. Minutos acumulados HISTÓRICOS (desde o início)
+                    const minsHistoricos = minhasAtividades
+                        .filter(a => a.subject_id === sub.id)
+                        .reduce((acc, curr) => acc + curr.duration_minutes, 0);
+                    
+                    const hHist = Math.floor(minsHistoricos / 60);
+                    const mHist = minsHistoricos % 60;
+
+                    // 2. Minutos acumulados DA SEMANA ATUAL
+                    const minsSemana = minhasAtividades
+                        .filter(a => a.subject_id === sub.id && new Date(a.created_at) >= segundaFeira)
+                        .reduce((acc, curr) => acc + curr.duration_minutes, 0);
+                    
+                    const hSem = Math.floor(minsSemana / 60);
+                    const mSem = minsSemana % 60;
+
                     subjectHoursList.innerHTML += `
-                        <div>
-                            <div class="flex justify-between text-xs mb-1">
-                                <span class="text-gray-300 font-medium"><i class="fa-solid fa-book-open text-emerald-400 mr-1.5"></i> ${sub.name}</span>
-                                <span class="text-emerald-400 font-bold">${hMat}h ${mMat}m</span>
+                        <div class="bg-dark-900 p-3 rounded-xl border border-gray-800 space-y-1.5">
+                            <div class="flex items-center justify-between text-xs">
+                                <span class="text-gray-200 font-semibold flex items-center">
+                                    <i class="fa-solid fa-book-open text-emerald-400 mr-1.5"></i> ${sub.name}
+                                </span>
+                                <span class="text-emerald-400 font-bold text-xs" title="Total Histórico Acumulado">
+                                    Total: ${hHist}h ${mHist}m
+                                </span>
                             </div>
-                            <div class="w-full bg-dark-900 h-2 rounded-full overflow-hidden border border-gray-800">
-                                <div class="bg-emerald-500 h-full rounded-full transition-all duration-500" style="width: ${totalMinutos > 0 ? (minsMateria / totalMinutos) * 100 : 0}%"></div>
+                            
+                            <!-- Barra de progresso semanal -->
+                            <div class="w-full bg-dark-800 h-2 rounded-full overflow-hidden border border-gray-700">
+                                <div class="bg-emerald-500 h-full rounded-full transition-all duration-500" style="width: ${totalMinutos > 0 ? (minsHistoricos / totalMinutos) * 100 : 0}%"></div>
+                            </div>
+                            
+                            <div class="flex justify-between items-center text-[10px] text-gray-400">
+                                <span>Esta semana: <strong class="text-gray-300">${hSem}h ${mSem}m</strong></span>
+                                <span>${totalMinutos > 0 ? Math.round((minsHistoricos / totalMinutos) * 100) : 0}% do total</span>
                             </div>
                         </div>
                     `;
