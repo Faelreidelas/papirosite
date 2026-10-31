@@ -32,24 +32,24 @@
 
     <!-- TELA 1: SELEÇÃO DE USUÁRIO (TELA DE ENTRADA) -->
     <div id="loginScreen" class="fixed inset-0 bg-dark-900 z-50 flex items-center justify-center p-4">
-        <div class="bg-dark-800 border border-gray-800 rounded-3xl p-8 max-w-md w-full shadow-2xl text-center">
-            <div class="inline-flex bg-emerald-500/10 p-4 rounded-2xl border border-emerald-500/20 text-emerald-400 mb-4">
-                <i class="fa-solid fa-user-graduate text-3xl"></i>
+        <div class="bg-dark-800 border border-gray-800 rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl text-center">
+            <div class="inline-flex bg-emerald-500/10 p-3.5 sm:p-4 rounded-2xl border border-emerald-500/20 text-emerald-400 mb-3 sm:mb-4">
+                <i class="fa-solid fa-user-graduate text-2xl sm:text-3xl"></i>
             </div>
-            <h1 class="text-2xl font-black text-white tracking-tight">Quem vai estudar hoje?</h1>
-            <p class="text-xs text-gray-400 mt-1 mb-6">Escolha o seu perfil para acessar o seu painel de horas líquidas.</p>
+            <h1 class="text-xl sm:text-2xl font-black text-white tracking-tight">Quem vai estudar hoje?</h1>
+            <p class="text-xs text-gray-400 mt-1 mb-5 sm:mb-6">Escolha o seu perfil para acessar o seu painel de horas líquidas.</p>
 
             <!-- Lista de Usuários Existentes -->
-            <div id="usersGrid" class="space-y-2 mb-6 max-h-60 overflow-y-auto pr-1">
+            <div id="usersGrid" class="space-y-2 mb-6 max-h-56 sm:max-h-60 overflow-y-auto pr-1">
                 <p class="text-xs text-gray-500 italic">Carregando usuários...</p>
             </div>
 
             <!-- Formulário para Criar Novo Perfil -->
             <div class="border-t border-gray-700/60 pt-4 text-left">
                 <label class="block text-xs font-semibold text-gray-400 mb-1.5">Novo por aqui? Crie seu perfil:</label>
-                <div class="flex space-x-2">
-                    <input type="text" id="inputLoginNewUser" placeholder="Seu nome ou apelido..." class="flex-grow bg-dark-900 border border-gray-700 rounded-xl px-3.5 py-2 text-sm focus:outline-none focus:border-emerald-500">
-                    <button onclick="criarUsuarioPelaEntrada()" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold px-4 py-2 rounded-xl transition">
+                <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
+                    <input type="text" id="inputLoginNewUser" placeholder="Seu nome ou apelido..." class="flex-grow bg-dark-900 border border-gray-700 rounded-xl px-3.5 py-2.5 sm:py-2 text-sm focus:outline-none focus:border-emerald-500">
+                    <button onclick="criarUsuarioPelaEntrada()" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold px-4 py-2.5 sm:py-2 rounded-xl transition w-full sm:w-auto">
                         Entrar
                     </button>
                 </div>
@@ -60,66 +60,74 @@
     <!-- TELA 2: DASHBOARD PRINCIPAL -->
     <div id="appDashboard" class="hidden min-h-screen flex flex-col justify-between">
         
-        <!-- Header -->
-        <header class="bg-dark-800 border-b border-gray-800 px-6 py-4 flex items-center justify-between shadow-md">
-            <div class="flex items-center space-x-3">
-                <div class="bg-emerald-500/10 p-2.5 rounded-xl border border-emerald-500/20 text-emerald-400">
-                    <i class="fa-solid fa-stopwatch text-xl"></i>
+        <!-- Header Responsivo -->
+        <header class="bg-dark-800 border-b border-gray-800 px-4 sm:px-6 py-3.5 sm:py-4 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-md">
+            <div class="flex items-center space-x-3 w-full sm:w-auto justify-between sm:justify-start">
+                <div class="flex items-center space-x-3">
+                    <div class="bg-emerald-500/10 p-2 sm:p-2.5 rounded-xl border border-emerald-500/20 text-emerald-400">
+                        <i class="fa-solid fa-stopwatch text-lg sm:text-xl"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-base sm:text-lg font-bold tracking-tight leading-tight">Horas Líquidas</h1>
+                        <p class="text-[10px] sm:text-xs text-gray-400">Vibecoding Study Hub</p>
+                    </div>
                 </div>
-                <div>
-                    <h1 class="text-lg font-bold tracking-tight">Horas Líquidas</h1>
-                    <p class="text-xs text-gray-400">Vibecoding Study Hub</p>
-                </div>
+
+                <!-- Botão Sair visível no topo no mobile -->
+                <button onclick="sairEVoltarParaLogin()" class="sm:hidden text-xs text-gray-400 hover:text-amber-400 transition bg-dark-900 p-2 rounded-xl border border-gray-700" title="Trocar de Perfil">
+                    <i class="fa-solid fa-right-from-bracket"></i>
+                </button>
             </div>
 
-            <div class="flex items-center space-x-4">
+            <div class="flex items-center space-x-3 w-full sm:w-auto justify-end">
                 <!-- Info Usuário Atual & Trocar Perfil -->
-                <div class="flex items-center space-x-3 bg-dark-900 px-3.5 py-1.5 rounded-xl border border-gray-700">
-                    <i class="fa-solid fa-circle-user text-emerald-400 text-base"></i>
-                    <span id="currentUserNameHeader" class="text-sm font-semibold text-gray-200">...</span>
-                    <button onclick="sairEVoltarParaLogin()" class="text-xs text-gray-400 hover:text-amber-400 transition ml-2" title="Trocar de Perfil">
+                <div class="flex items-center space-x-2.5 bg-dark-900 px-3 py-1.5 rounded-xl border border-gray-700 text-xs sm:text-sm w-full sm:w-auto justify-between sm:justify-start">
+                    <div class="flex items-center space-x-2 truncate">
+                        <i class="fa-solid fa-circle-user text-emerald-400 text-sm"></i>
+                        <span id="currentUserNameHeader" class="font-semibold text-gray-200 truncate">...</span>
+                    </div>
+                    <button onclick="sairEVoltarParaLogin()" class="hidden sm:inline-block text-xs text-gray-400 hover:text-amber-400 transition ml-2" title="Trocar de Perfil">
                         <i class="fa-solid fa-right-from-bracket"></i> Sair
                     </button>
                 </div>
 
                 <!-- Status Conexão -->
-                <div id="connectionStatus" class="hidden sm:flex items-center space-x-2 text-xs px-3 py-1.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                <div id="connectionStatus" class="hidden md:flex items-center space-x-2 text-xs px-3 py-1.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 whitespace-nowrap">
                     <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
                     <span id="statusText">Nuvem Conectada</span>
                 </div>
             </div>
         </header>
 
-        <!-- Main Content -->
-        <main class="max-w-7xl mx-auto px-6 py-8 grid grid-cols-1 lg:grid-cols-3 gap-6 flex-grow w-full">
+        <!-- Main Content (Layout Adaptável) -->
+        <main class="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8 grid grid-cols-1 lg:grid-cols-3 gap-6 flex-grow w-full">
             
-            <!-- Coluna Esquerda & Centro -->
+            <!-- Coluna Esquerda & Centro (Cronômetro + Manual + Stats) -->
             <div class="lg:col-span-2 space-y-6">
                 
                 <!-- Cronômetro Card -->
-                <div class="bg-dark-800 rounded-2xl p-6 border border-gray-800 shadow-xl relative overflow-hidden flex flex-col justify-between">
-                    <div class="flex items-center justify-between mb-6">
+                <div class="bg-dark-800 rounded-2xl p-4 sm:p-6 border border-gray-800 shadow-xl relative overflow-hidden flex flex-col justify-between">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 sm:mb-6">
                         <div class="flex items-center space-x-2">
                             <span id="timerDot" class="w-3 h-3 rounded-full bg-emerald-500"></span>
-                            <h2 id="timerTitle" class="font-semibold text-gray-200">Sessão Ativa</h2>
+                            <h2 id="timerTitle" class="font-semibold text-gray-200 text-sm sm:text-base">Sessão Ativa</h2>
                         </div>
-                        <div class="flex items-center space-x-2">
-                            <label class="text-xs text-gray-400">Matéria:</label>
-                            <select id="timerSubjectSelect" class="bg-dark-900 text-sm border border-gray-700 rounded-lg px-3 py-1.5 focus:outline-none focus:border-emerald-500">
+                        <div class="flex items-center space-x-2 w-full sm:w-auto">
+                            <select id="timerSubjectSelect" class="flex-grow sm:flex-grow-0 bg-dark-900 text-xs sm:text-sm border border-gray-700 rounded-lg px-2.5 sm:px-3 py-2 sm:py-1.5 focus:outline-none focus:border-emerald-500">
                                 <option value="">Sem matérias (Crie uma)</option>
                             </select>
-                            <button onclick="abrirModalNovaMateria()" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs px-2.5 py-1.5 rounded-lg transition font-medium">
+                            <button onclick="abrirModalNovaMateria()" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs px-2.5 py-2 sm:py-1.5 rounded-lg transition font-medium whitespace-nowrap">
                                 + Nova
                             </button>
                         </div>
                     </div>
 
                     <!-- Display do Cronômetro -->
-                    <div class="text-center py-6">
-                        <div id="timerDisplay" class="text-6xl sm:text-7xl font-black tracking-wider text-white font-mono drop-shadow-lg">
+                    <div class="text-center py-4 sm:py-6">
+                        <div id="timerDisplay" class="text-5xl sm:text-7xl font-black tracking-wider text-white font-mono drop-shadow-lg">
                             00:00:00
                         </div>
-                        <div class="flex justify-center items-center space-x-4 mt-2">
+                        <div class="flex flex-wrap justify-center items-center gap-2 mt-2">
                             <p id="timerSubtext" class="text-xs text-gray-400">Pronto para começar? Clique em Iniciar!</p>
                             <span id="pausesCounterBadge" class="hidden text-[10px] bg-amber-500/10 text-amber-400 px-2 py-0.5 rounded-full border border-amber-500/20 font-medium">
                                 <i class="fa-solid fa-mug-hot"></i> Pausas: <span id="pauseCountNum">0</span>
@@ -128,61 +136,61 @@
                     </div>
 
                     <!-- Controles do Cronômetro -->
-                    <div class="flex items-center justify-center space-x-4 pt-4 border-t border-gray-700/50">
-                        <button id="startPauseBtn" onclick="toggleTimer()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-8 py-3 rounded-xl font-semibold transition flex items-center space-x-2 shadow-lg shadow-emerald-600/20">
+                    <div class="flex flex-wrap sm:flex-nowrap items-center justify-center gap-2.5 sm:gap-4 pt-4 border-t border-gray-700/50">
+                        <button id="startPauseBtn" onclick="toggleTimer()" class="flex-1 sm:flex-none bg-emerald-600 hover:bg-emerald-500 text-white px-6 sm:px-8 py-2.5 sm:py-3 rounded-xl font-semibold text-sm transition flex items-center justify-center space-x-2 shadow-lg shadow-emerald-600/20">
                             <i id="startPauseIcon" class="fa-solid fa-play"></i>
                             <span id="startPauseText">Iniciar Foco</span>
                         </button>
-                        <button id="pauseResumeBtn" onclick="pausarOuRetomarCronometro()" disabled class="bg-dark-700 text-gray-500 px-5 py-3 rounded-xl font-semibold transition border border-gray-700 cursor-not-allowed">
+                        <button id="pauseResumeBtn" onclick="pausarOuRetomarCronometro()" disabled class="flex-1 sm:flex-none bg-dark-700 text-gray-500 px-4 sm:px-5 py-2.5 sm:py-3 rounded-xl font-semibold text-sm transition border border-gray-700 cursor-not-allowed">
                             <i class="fa-solid fa-pause"></i> Pausa
                         </button>
-                        <button onclick="resetTimer()" class="bg-dark-700 hover:bg-dark-600 text-gray-300 p-3 rounded-xl transition border border-gray-700" title="Zerar">
+                        <button onclick="resetTimer()" class="bg-dark-700 hover:bg-dark-600 text-gray-300 p-2.5 sm:p-3 rounded-xl transition border border-gray-700" title="Zerar">
                             <i class="fa-solid fa-rotate-right"></i>
                         </button>
                     </div>
                 </div>
 
                 <!-- Registro Manual -->
-                <div class="bg-dark-800 rounded-2xl p-6 border border-gray-800 shadow-xl">
-                    <h3 class="font-semibold text-gray-200 mb-1">Registro Manual</h3>
+                <div class="bg-dark-800 rounded-2xl p-4 sm:p-6 border border-gray-800 shadow-xl">
+                    <h3 class="font-semibold text-gray-200 text-sm sm:text-base mb-1">Registro Manual</h3>
                     <p class="text-xs text-gray-400 mb-4">Estudou fora do app? Insira o tempo de estudo manualmente aqui.</p>
                     
-                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
                         <div>
                             <label class="block text-xs text-gray-400 mb-1">Matéria</label>
-                            <select id="manualSubjectSelect" class="w-full bg-dark-900 text-sm border border-gray-700 rounded-xl px-3 py-2.5 focus:outline-none focus:border-emerald-500">
+                            <select id="manualSubjectSelect" class="w-full bg-dark-900 text-sm border border-gray-700 rounded-xl px-3 py-2 sm:py-2.5 focus:outline-none focus:border-emerald-500">
                                 <option value="">Selecione...</option>
                             </select>
                         </div>
                         <div>
                             <label class="block text-xs text-gray-400 mb-1">Horas</label>
-                            <input type="number" id="manualHours" min="0" value="1" class="w-full bg-dark-900 text-sm border border-gray-700 rounded-xl px-3 py-2.5 focus:outline-none focus:border-emerald-500">
+                            <input type="number" id="manualHours" min="0" value="1" class="w-full bg-dark-900 text-sm border border-gray-700 rounded-xl px-3 py-2 sm:py-2.5 focus:outline-none focus:border-emerald-500">
                         </div>
                         <div>
                             <label class="block text-xs text-gray-400 mb-1">Minutos</label>
-                            <input type="number" id="manualMinutes" min="0" max="59" value="0" class="w-full bg-dark-900 text-sm border border-gray-700 rounded-xl px-3 py-2.5 focus:outline-none focus:border-emerald-500">
+                            <input type="number" id="manualMinutes" min="0" max="59" value="0" class="w-full bg-dark-900 text-sm border border-gray-700 rounded-xl px-3 py-2 sm:py-2.5 focus:outline-none focus:border-emerald-500">
                         </div>
                     </div>
                     <div class="mt-4 flex justify-end">
-                        <button onclick="adicionarHorasManuais()" class="bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-semibold px-5 py-2.5 rounded-xl transition shadow-lg shadow-emerald-600/20">
+                        <button onclick="adicionarHorasManuais()" class="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-semibold px-5 py-2.5 rounded-xl transition shadow-lg shadow-emerald-600/20">
                             + Adicionar Horas
                         </button>
                     </div>
                 </div>
 
                 <!-- Estatísticas e Meta Diária -->
-                <div class="bg-dark-800 rounded-2xl p-6 border border-gray-800 shadow-xl">
-                    <div class="flex items-center justify-between mb-4">
+                <div class="bg-dark-800 rounded-2xl p-4 sm:p-6 border border-gray-800 shadow-xl">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
                         <div>
-                            <h3 class="font-semibold text-gray-200">Estatísticas e Meta Diária</h3>
+                            <h3 class="font-semibold text-gray-200 text-sm sm:text-base">Estatísticas e Meta Diária</h3>
                             <p id="userStatsSubtitle" class="text-xs text-gray-400">Resumo de desempenho</p>
                         </div>
-                        <button onclick="abrirModalMeta()" class="text-xs bg-dark-700 hover:bg-dark-600 px-3 py-1.5 rounded-xl border border-gray-700 text-emerald-400 font-medium transition">
+                        <button onclick="abrirModalMeta()" class="self-start sm:self-auto text-xs bg-dark-700 hover:bg-dark-600 px-3 py-1.5 rounded-xl border border-gray-700 text-emerald-400 font-medium transition">
                             <i class="fa-solid fa-bullseye"></i> Ajustar Meta (<span id="metaDiariaBadgeText">2h 0m</span>)
                         </button>
                     </div>
 
-                    <div class="bg-dark-900 p-4 rounded-xl border border-gray-800 mb-6">
+                    <div class="bg-dark-900 p-3.5 sm:p-4 rounded-xl border border-gray-800 mb-6">
                         <div class="flex justify-between text-xs mb-2">
                             <span class="text-gray-400 font-medium">Progresso da Meta Hoje</span>
                             <span id="metaProgressoTexto" class="text-emerald-400 font-bold">0h 0m / 2h 0m (0%)</span>
@@ -192,18 +200,18 @@
                         </div>
                     </div>
                     
-                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-                        <div class="bg-dark-900 p-4 rounded-xl border border-gray-800">
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-6">
+                        <div class="bg-dark-900 p-3.5 sm:p-4 rounded-xl border border-gray-800">
                             <span class="text-xs text-gray-400 block">Total Acumulado</span>
-                            <span id="statTotalHours" class="text-2xl font-bold text-emerald-400 mt-1 block">0h 0m</span>
+                            <span id="statTotalHours" class="text-xl sm:text-2xl font-bold text-emerald-400 mt-1 block">0h 0m</span>
                         </div>
-                        <div class="bg-dark-900 p-4 rounded-xl border border-gray-800">
+                        <div class="bg-dark-900 p-3.5 sm:p-4 rounded-xl border border-gray-800">
                             <span class="text-xs text-gray-400 block">Sessões Concluídas</span>
-                            <span id="statTotalSessions" class="text-2xl font-bold text-gray-200 mt-1 block">0</span>
+                            <span id="statTotalSessions" class="text-xl sm:text-2xl font-bold text-gray-200 mt-1 block">0</span>
                         </div>
-                        <div class="bg-dark-900 p-4 rounded-xl border border-gray-800">
+                        <div class="bg-dark-900 p-3.5 sm:p-4 rounded-xl border border-gray-800">
                             <span class="text-xs text-gray-400 block">Matérias Ativas</span>
-                            <span id="statTotalSubjects" class="text-2xl font-bold text-gray-200 mt-1 block">0</span>
+                            <span id="statTotalSubjects" class="text-xl sm:text-2xl font-bold text-gray-200 mt-1 block">0</span>
                         </div>
                     </div>
 
@@ -217,15 +225,15 @@
 
             </div>
 
-            <!-- Coluna Direita -->
+            <!-- Coluna Direita (Feed + Ranking + Matérias) -->
             <div class="space-y-6">
                 
                 <!-- Estudando AGORA (Feed ao Vivo) -->
-                <div class="bg-dark-800 rounded-2xl p-6 border border-gray-800 shadow-xl">
+                <div class="bg-dark-800 rounded-2xl p-4 sm:p-6 border border-gray-800 shadow-xl">
                     <div class="flex items-center justify-between mb-4">
                         <div class="flex items-center space-x-2">
                             <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping"></span>
-                            <h3 class="font-semibold text-gray-200">Estudando Agora</h3>
+                            <h3 class="font-semibold text-gray-200 text-sm sm:text-base">Estudando Agora</h3>
                         </div>
                         <span class="text-[10px] bg-emerald-500/10 text-emerald-400 px-2 py-0.5 rounded-full border border-emerald-500/20">Ao Vivo</span>
                     </div>
@@ -235,24 +243,24 @@
                 </div>
 
                 <!-- Ranking da Galera -->
-                <div class="bg-dark-800 rounded-2xl p-6 border border-gray-800 shadow-xl">
+                <div class="bg-dark-800 rounded-2xl p-4 sm:p-6 border border-gray-800 shadow-xl">
                     <div class="flex items-center justify-between mb-4">
                         <div class="flex items-center space-x-2">
-                            <i class="fa-solid fa-trophy text-amber-400"></i>
-                            <h3 class="font-semibold text-gray-200">Ranking da Galera</h3>
+                            <i class="fa-solid fa-trophy text-amber-400 text-sm sm:text-base"></i>
+                            <h3 class="font-semibold text-gray-200 text-sm sm:text-base">Ranking da Galera</h3>
                         </div>
                         <span class="text-[10px] bg-amber-500/10 text-amber-400 px-2 py-0.5 rounded-full border border-amber-500/20 font-medium">Horas Líquidas</span>
                     </div>
                     
-                    <div id="leaderboardList" class="space-y-3">
+                    <div id="leaderboardList" class="space-y-2.5">
                         <!-- Preenchido via JS -->
                     </div>
                 </div>
 
                 <!-- Gerenciar Matérias -->
-                <div class="bg-dark-800 rounded-2xl p-6 border border-gray-800 shadow-xl">
+                <div class="bg-dark-800 rounded-2xl p-4 sm:p-6 border border-gray-800 shadow-xl">
                     <div class="flex items-center justify-between mb-4">
-                        <h3 class="font-semibold text-gray-200">Suas Matérias</h3>
+                        <h3 class="font-semibold text-gray-200 text-sm sm:text-base">Suas Matérias</h3>
                         <button onclick="abrirModalNovaMateria()" class="text-xs text-emerald-400 hover:text-emerald-300 font-medium">+ Criar Matéria</button>
                     </div>
                     <div id="subjectsManageList" class="space-y-2 max-h-48 overflow-y-auto pr-1">
@@ -302,7 +310,7 @@
         // COLE SUAS CREDENCIAIS DO SUPABASE AQUI:
         // ==========================================
         const PUBLIC_SUPABASE_URL = "https://pypnruofxzufqontuwdq.supabase.co"; 
-        const PUBLIC_SUPABASE_KEY = "sb_publishable_TkfQfazm2cgkmVZ0BL0oqA_HmwV-gOA";
+        const PUBLIC_SUPABASE_KEY = "sb_publishable_TkfQfazm2cgkmVZ0BL0oqA_HmwV-gOA";
         // ==========================================
 
         let supabaseClient = null;
@@ -322,7 +330,6 @@
             initSupabase();
             await carregarUsuarios();
             
-            // Se já tiver um usuário salvo neste navegador, entra direto
             let savedUserId = localStorage.getItem('current_user_id');
             let userExistente = usersList.find(u => u.id === savedUserId);
 
@@ -571,13 +578,13 @@
                     liveList.innerHTML += `
                         <div class="bg-dark-900 p-3 rounded-xl border border-emerald-500/30 flex items-center justify-between text-xs shadow-md">
                             <div class="flex items-center space-x-2.5">
-                                <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping"></span>
-                                <div>
-                                    <span class="font-bold text-gray-200">${u.name}${isMe}</span>
-                                    <span class="text-gray-400 block mt-0.5">Matéria: <strong class="text-emerald-400">${materiaNome}</strong></span>
+                                <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping flex-shrink-0"></span>
+                                <div class="truncate">
+                                    <span class="font-bold text-gray-200 block truncate">${u.name}${isMe}</span>
+                                    <span class="text-gray-400 block mt-0.5 truncate">Matéria: <strong class="text-emerald-400">${materiaNome}</strong></span>
                                 </div>
                             </div>
-                            <span class="text-[10px] bg-emerald-500/10 text-emerald-400 px-2 py-1 rounded-lg border border-emerald-500/20 font-semibold">Ao Vivo ⚡</span>
+                            <span class="text-[10px] bg-emerald-500/10 text-emerald-400 px-2 py-1 rounded-lg border border-emerald-500/20 font-semibold flex-shrink-0 ml-2">Ao Vivo ⚡</span>
                         </div>
                     `;
                 });
@@ -608,10 +615,10 @@
 
                 icon.className = "fa-solid fa-stop";
                 text.innerText = "Parar & Salvar";
-                btn.className = "bg-rose-600 hover:bg-rose-500 text-white px-6 py-3 rounded-xl font-semibold transition flex items-center space-x-2 shadow-lg shadow-rose-600/20";
+                btn.className = "flex-1 sm:flex-none bg-rose-600 hover:bg-rose-500 text-white px-6 py-2.5 sm:py-3 rounded-xl font-semibold text-sm transition flex items-center justify-center space-x-2 shadow-lg shadow-rose-600/20";
                 
                 pauseBtn.disabled = false;
-                pauseBtn.className = "bg-amber-600 hover:bg-amber-500 text-white px-5 py-3 rounded-xl font-semibold transition border border-amber-500/30 cursor-pointer";
+                pauseBtn.className = "flex-1 sm:flex-none bg-amber-600 hover:bg-amber-500 text-white px-5 py-2.5 sm:py-3 rounded-xl font-semibold text-sm transition border border-amber-500/30 cursor-pointer";
 
                 document.getElementById('timerSubjectSelect').disabled = true;
                 document.getElementById('timerDot').className = "w-3 h-3 rounded-full bg-emerald-500 animate-ping";
@@ -640,13 +647,13 @@
                 pausesCount++;
                 document.getElementById('pauseCountNum').innerText = pausesCount;
 
-                pauseBtn.className = "bg-emerald-600 hover:bg-emerald-500 text-white px-5 py-3 rounded-xl font-semibold transition border border-emerald-500/30 cursor-pointer";
+                pauseBtn.className = "flex-1 sm:flex-none bg-emerald-600 hover:bg-emerald-500 text-white px-5 py-2.5 sm:py-3 rounded-xl font-semibold text-sm transition border border-emerald-500/30 cursor-pointer";
                 pauseBtn.innerHTML = '<i class="fa-solid fa-play"></i> Retomar';
                 document.getElementById('timerTitle').innerText = "Em Pausa ☕";
             } else {
                 isPaused = false;
                 timerRunning = true;
-                pauseBtn.className = "bg-amber-600 hover:bg-amber-500 text-white px-5 py-3 rounded-xl font-semibold transition border border-amber-500/30 cursor-pointer";
+                pauseBtn.className = "flex-1 sm:flex-none bg-amber-600 hover:bg-amber-500 text-white px-5 py-2.5 sm:py-3 rounded-xl font-semibold text-sm transition border border-amber-500/30 cursor-pointer";
                 pauseBtn.innerHTML = '<i class="fa-solid fa-pause"></i> Pausa';
                 document.getElementById('timerTitle').innerText = "Foco Ativo ⚡";
 
@@ -669,10 +676,10 @@
             
             icon.className = "fa-solid fa-play";
             text.innerText = "Iniciar Foco";
-            btn.className = "bg-emerald-600 hover:bg-emerald-500 text-white px-8 py-3 rounded-xl font-semibold transition flex items-center space-x-2 shadow-lg shadow-emerald-600/20";
+            btn.className = "flex-1 sm:flex-none bg-emerald-600 hover:bg-emerald-500 text-white px-8 py-2.5 sm:py-3 rounded-xl font-semibold text-sm transition flex items-center justify-center space-x-2 shadow-lg shadow-emerald-600/20";
             
             pauseBtn.disabled = true;
-            pauseBtn.className = "bg-dark-700 text-gray-500 px-5 py-3 rounded-xl font-semibold transition border border-gray-700 cursor-not-allowed";
+            pauseBtn.className = "flex-1 sm:flex-none bg-dark-700 text-gray-500 px-5 py-2.5 sm:py-3 rounded-xl font-semibold text-sm transition border border-gray-700 cursor-not-allowed";
             
             document.getElementById('timerSubjectSelect').disabled = false;
             document.getElementById('timerDot').className = "w-3 h-3 rounded-full bg-emerald-500";
