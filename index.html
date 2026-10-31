@@ -310,7 +310,7 @@
         // COLE SUAS CREDENCIAIS DO SUPABASE AQUI:
         // ==========================================
         const PUBLIC_SUPABASE_URL = "https://pypnruofxzufqontuwdq.supabase.co"; 
-        const PUBLIC_SUPABASE_KEY = "sb_publishable_TkfQfazm2cgkmVZ0BL0oqA_HmwV-gOA";
+        const PUBLIC_SUPABASE_KEY = "sb_publishable_TkfQfazm2cgkmVZ0BL0oqA_HmwV-gOA";
         // ==========================================
 
         let supabaseClient = null;
@@ -513,6 +513,13 @@
             document.getElementById('metaProgressoTexto').innerText = `${hHoje}h ${mHoje}m / ${metaH}h ${metaM}m (${percentualMeta}%)`;
             document.getElementById('metaProgressBar').style.width = `${percentualMeta}%`;
 
+            // CORREÇÃO: Declarar a segunda-feira ANTES de usá-la nas listagens
+            const agora = new Date();
+            const diaSemana = agora.getDay();
+            const diffAteSegunda = agora.getDate() - diaSemana + (diaSemana === 0 ? -6 : 1);
+            const segundaFeira = new Date(agora.setDate(diffAteSegunda));
+            segundaFeira.setHours(0, 0, 0, 0);
+
             // Horas por Matéria (Individual: Semanal + Total Histórico)
             const subjectHoursList = document.getElementById('subjectHoursList');
             subjectHoursList.innerHTML = '';
@@ -521,7 +528,6 @@
                 subjectHoursList.innerHTML = '<p class="text-xs text-gray-500 italic">Nenhum registro ainda.</p>';
             } else {
                 subjectsList.forEach(sub => {
-                    // 1. Minutos acumulados HISTÓRICOS (desde o início)
                     const minsHistoricos = minhasAtividades
                         .filter(a => a.subject_id === sub.id)
                         .reduce((acc, curr) => acc + curr.duration_minutes, 0);
@@ -529,7 +535,6 @@
                     const hHist = Math.floor(minsHistoricos / 60);
                     const mHist = minsHistoricos % 60;
 
-                    // 2. Minutos acumulados DA SEMANA ATUAL
                     const minsSemana = minhasAtividades
                         .filter(a => a.subject_id === sub.id && new Date(a.created_at) >= segundaFeira)
                         .reduce((acc, curr) => acc + curr.duration_minutes, 0);
@@ -548,7 +553,6 @@
                                 </span>
                             </div>
                             
-                            <!-- Barra de progresso semanal -->
                             <div class="w-full bg-dark-800 h-2 rounded-full overflow-hidden border border-gray-700">
                                 <div class="bg-emerald-500 h-full rounded-full transition-all duration-500" style="width: ${totalMinutos > 0 ? (minsHistoricos / totalMinutos) * 100 : 0}%"></div>
                             </div>
@@ -561,13 +565,6 @@
                     `;
                 });
             }
-
-            // FUNÇÃO PARA CALQUILAR A SEGUNDA-FEIRA DA SEMANA ATUAL (Para o Ranking Semanal)
-            const agora = new Date();
-            const diaSemana = agora.getDay();
-            const diffAteSegunda = agora.getDate() - diaSemana + (diaSemana === 0 ? -6 : 1);
-            const segundaFeira = new Date(agora.setDate(diffAteSegunda));
-            segundaFeira.setHours(0, 0, 0, 0);
 
             // Ranking Geral Semanal (Reinicia toda segunda-feira)
             const leaderboardList = document.getElementById('leaderboardList');
@@ -599,7 +596,6 @@
 
             atualizarFeedAoVivo();
         }
-        
 
         function atualizarFeedAoVivo() {
             const liveList = document.getElementById('liveStudyingNowList');
